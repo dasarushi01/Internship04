@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Daily Planner</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa4b2;
+      --accent:#60a5fa;
+      --success:#34d399;
+      --danger:#fb7185;
+      --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: linear-gradient(180deg,#071126 0%, #07192b 60%);
+      color:#e6eef6;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .app {
+      width:100%;
+      max-width:980px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:16px;
+      box-shadow: 0 10px 30px rgba(2,6,23,0.7);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap:16px;
+      padding:18px;
+    }
+
+    @media (max-width:950px){
+      .app{ grid-template-columns: 1fr; padding:14px; }
+    }
+
+    /* Header */
+    header.app-header{
+      grid-column: 1 / -1;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .title{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+    .logo {
+      width:52px;
+      height:52px;
+      border-radius:10px;
+      background: linear-gradient(135deg,var(--accent),#7c3aed);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      color:#021026;
+      box-shadow: 0 6px 18px rgba(96,165,250,0.12);
+      font-size:18px;
+    }
+    h1{
+      margin:0;
+      font-size:20px;
+      letter-spacing:0.2px;
+    }
+    .meta{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* Left column (main) */
+    .left {
+      padding:12px;
+      border-radius:12px;
+      background: linear-gradient(180deg,var(--glass), transparent);
+      min-height:380px;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+
+    label{ font-size:13px; color:var(--muted); display:block; margin-bottom:4px; }
+
+    .field {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      width:100%;
+    }
+
+    .input, select, input[type="time"], input[type="date"]{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,0.03);
+      color:inherit;
+      padding:10px 12px;
+      border-radius:10px;
+      font-size:14px;
+      outline:none;
+      width:100%;
+      transition: box-shadow .18s ease, transform .12s;
+    }
+    .input:focus{ box-shadow: 0 6px 18px rgba(96,165,250,0.12); transform: translateY(-1px); }
+
+    .btn {
+      background: linear-gradient(90deg,var(--accent), #7c3aed);
+      border: none;
+      color: #021026;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow: 0 8px 22px rgba(122,95,255,0.12);
+      transition: transform .12s ease, opacity .12s;
+    }
+    .btn:active{ transform: translateY(1px) }
+    .btn.ghost {
+      background: transparent;
+      border:1px solid rgba(255,255,255,0.04);
+      color:var(--muted);
+      box-shadow:none;
+    }
+
+    .filters{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-left:auto;
+    }
+
+    /* Tasks list */
+    .tasks {
+      margin-top:12px;
+      display:grid;
+      gap:10px;
+    }
+
+    .task-card {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      padding:10px;
+      border-radius:12px;
+      border-left:6px solid transparent;
+      transition: transform .12s ease, opacity .12s ease, box-shadow .12s;
+    }
+    .task-card:hover{ transform: translateY(-4px); box-shadow: 0 8px 30px rgba(2,6,23,0.35); }
+    .task-time{
+      min-width:80px;
+      font-size:13px;
+      color:var(--muted);
+      text-align:left;
+    }
+    .task-body{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .task-text{
+      font-size:15px;
+      word-break:break-word;
+    }
+    .task-actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .icon-btn{
+      background:transparent;
+      border:none;
+      color:var(--muted);
+      padding:8px;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    .icon-btn:hover{ background:rgba(255,255,255,0.02); color:#fff; }
+
+    .done { text-decoration:line-through; opacity:0.6; color: #b6c3ce; }
+
+    /* right column */
+    .right {
+      padding:12px;
+      border-radius:12px;
+      background: linear-gradient(180deg,var(--glass-2), transparent);
+      min-height:380px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .section-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .quote {
+      padding:12px;
+      border-radius:10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+      font-size:14px;
+      color:#d6e6f8;
+      min-height:60px;
+      display:flex;
+      align-items:center;
+    }
+
+    /* color-coded time blocks using classes */
+    .past { border-left-color: rgba(107,114,128,0.8); }
+    .current { border-left-color: var(--accent); box-shadow: 0 6px 18px rgba(96,165,250,0.06); }
+    .upcoming { border-left-color: var(--success); }
+
+    /* small calendar & legend */
+    .small-calendar{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .legend{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .legend-item{ display:flex; gap:6px; align-items:center; font-size:13px; color:var(--muted); }
+    .swatch{ width:12px; height:12px; border-radius:3px; background: #333; display:inline-block; }
+
+    .empty {
+      padding:14px;
+      border-radius:10px;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    footer.app-footer{
+      grid-column:1 / -1;
+      display:flex;
+      justify-content:center;
+      color:var(--muted);
+      font-size:13px;
+      gap:8px;
+      align-items:center;
+      padding-top:6px;
+    }
+
+    /* small helpers */
+    .sr-only{ position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  </style>
+</head>
+<body>
+  <main class="app" role="application" aria-labelledby="appTitle">
+
+    <header class="app-header">
+      <div class="title">
+        <div class="logo" aria-hidden="true">DP</div>
+        <div>
+          <h1 id="appTitle">My Daily Planner</h1>
+          <div class="meta" id="currentDate" aria-live="polite">Loading date…</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="meta" id="summary">0 tasks</div>
+        <button class="btn" id="clearAllBtn" title="Clear tasks for selected day">Clear Day</button>
+      </div>
+    </header>
+
+    <!-- LEFT: Task entry + list -->
+    <section class="left" aria-labelledby="tasksHeading">
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-direction:column;">
+        <div class="controls" style="width:100%;">
+          <div style="flex:1; min-width:180px;">
+            <label for="taskText">Task</label>
+            <input id="taskText" class="input" type="text" placeholder="What do you want to do?" aria-label="Task description" />
+          </div>
+
+          <div style="width:150px;">
+            <label for="taskTime">Time</label>
+            <input id="taskTime" class="input" type="time" aria-label="Task time" />
+          </div>
+
+          <div style="width:140px;">
+            <label for="taskDate">Date</label>
+            <input id="taskDate" class="input" type="date" aria-label="Task date" />
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label class="sr-only" for="addBtn">Add</label>
+            <button id="addBtn" class="btn" aria-label="Add task">Add Task</button>
+            <button id="addNowBtn" class="btn ghost" aria-label="Add task for current time">Add Now</button>
+          </div>
+
+          <div class="filters" role="group" aria-label="Time of day filter">
+            <label for="timeFilter" class="sr-only">Filter</label>
+            <select id="timeFilter" class="input" aria-label="Filter tasks by time of day">
+              <option value="all">All times</option>
+              <option value="morning">Morning (05:00 - 11:59)</option>
+              <option value="afternoon">Afternoon (12:00 - 16:59)</option>
+              <option value="evening">Evening (17:00 - 21:59)</option>
+              <option value="night">Night (22:00 - 04:59)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="width:100%;">
+          <div id="tasksHeading" class="section-title">
+            <strong>Tasks</strong>
+            <div class="meta" id="tasksForDayLabel">for selected day</div>
+          </div>
+
+          <div id="tasksList" class="tasks" aria-live="polite" aria-label="List of tasks">
+            <!-- task-cards injected here -->
+          </div>
+
+          <div id="emptyState" class="empty" hidden>
+            No tasks yet — add your first task!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Sidebar: calendar, quote, legend -->
+    <aside class="right" aria-labelledby="sidebarTitle">
+      <div class="section-title">
+        <strong id="sidebarTitle">Day & Calendar</strong>
+        <div class="meta" id="localTime">--:--</div>
+      </div>
+
+      <div class="small-calendar" role="region" aria-label="Calendar controls">
+        <div>
+          <label for="datePicker">Pick date</label>
+          <input id="datePicker" type="date" class="input" aria-label="Pick a date to view tasks" />
+        </div>
+        <div style="margin-left:auto;">
+          <label for="jumpToToday" class="sr-only">Today</label>
+          <button id="jumpToToday" class="btn ghost">Today</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><strong>Legend</strong><span class="meta">time status</span></div>
+        <div class="legend" aria-hidden="true">
+          <div class="legend-item"><span class="swatch" style="background:rgba(107,114,128,0.9)"></span> Past</div>
+          <div class="legend-item"><span class="swatch" style="background:linear-gradient(90deg,var(--accent),#7c3aed)"></span> Current</div>
+          <div class="legend-item"><span class="swatch" style="background:var(--success)"></span> Upcoming</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><strong>Motivation</strong><span class="meta">rotate daily</span></div>
+        <div id="quoteBox" class="quote">Loading motivational tip…</div>
+      </div>
+
+      <div style="margin-top:auto;">
+        <div class="section-title"><strong>Stats</strong><span class="meta">task progress</span></div>
+        <div id="statsBox" style="padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);">
+          <div class="meta">Total: <span id="statTotal">0</span></div>
+          <div class="meta">Done: <span id="statDone">0</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <footer class="app-footer">
+      <div>&copy; <span id="year"></span> My Daily Planner</div>
+      <div>•</div>
+      <div class="meta">Built with HTML5, CSS3, JS — localStorage</div>
+    </footer>
+  </main>
+
+  <script>
+    /* ========== Simple Daily Planner JS ========== */
+    (function(){
+      const STORAGE_KEY = 'dailyPlannerTasks_v1';
+      // DOM
+      const currentDateEl = document.getElementById('currentDate');
+      const localTimeEl = document.getElementById('localTime');
+      const yearEl = document.getElementById('year');
+
+      const taskText = document.getElementById('taskText');
+      const taskTime = document.getElementById('taskTime');
+      const taskDate = document.getElementById('taskDate');
+      const addBtn = document.getElementById('addBtn');
+      const addNowBtn = document.getElementById('addNowBtn');
+      const tasksList = document.getElementById('tasksList');
+      const emptyState = document.getElementById('emptyState');
+      const tasksForDayLabel = document.getElementById('tasksForDayLabel');
+      const timeFilter = document.getElementById('timeFilter');
+      const datePicker = document.getElementById('datePicker');
+      const jumpToToday = document.getElementById('jumpToToday');
+      const clearAllBtn = document.getElementById('clearAllBtn');
+
+      const statTotal = document.getElementById('statTotal');
+      const statDone = document.getElementById('statDone');
+      const summary = document.getElementById('summary');
+
+      const quoteBox = document.getElementById('quoteBox');
+
+      // motivational quotes array
+      const quotes = [
+        "Small progress is still progress. Keep going.",
+        "Focus on one thing, do it well, repeat.",
+        "Start where you are. Use what you have. Do what you can.",
+        "The secret of getting ahead is getting started.",
+        "You don't have to be perfect to make progress.",
+        "Work hard in silence. Let success be the noise.",
+        "Do it for the future you — your present self will thank you."
+      ];
+
+      // internal state
+      let tasks = []; // array of {id, text, time (HH:MM), date (YYYY-MM-DD), done:bool}
+      let selectedDate = todayISO();
+
+      function todayISO(d = new Date()){
+        const z = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+        return z.toISOString().slice(0,10);
+      }
+
+      function formatDateLong(iso){
+        const d = new Date(iso + 'T00:00:00');
+        return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year:'numeric' });
+      }
+
+      function formatTimeFromHM(hm){
+        if(!hm) return '';
+        const [h,m] = hm.split(':').map(Number);
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      }
+
+      function save(){
+        try{
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }catch(e){
+          console.warn('Could not save tasks', e);
+        }
+      }
+
+      function load(){
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if(raw) tasks = JSON.parse(raw);
+          else tasks = [];
+        } catch(e){
+          tasks = [];
+          console.error('load error', e);
+        }
+      }
+
+      function uid(){
+        return 't_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+      }
+
+      function addTask(payload){
+        tasks.push({
+          id: uid(),
+          text: payload.text,
+          time: payload.time || '',
+          date: payload.date || todayISO(),
+          done: false,
+          createdAt: new Date().toISOString()
+        });
+        save();
+        render();
+      }
+
+      function deleteTask(id){
+        tasks = tasks.filter(t => t.id !== id);
+        save();
+        render();
+      }
+
+      function toggleDone(id){
+        const t = tasks.find(x => x.id === id);
+        if(t) t.done = !t.done;
+        save();
+        render();
+      }
+
+      function clearDay(date){
+        tasks = tasks.filter(t => t.date !== date);
+        save();
+        render();
+      }
+
+      function tasksFor(date, filter='all'){
+        const dayTasks = tasks.filter(t => t.date === date);
+        if(filter === 'all') return dayTasks.sort(compareTime);
+        const f = filter;
+        return dayTasks.filter(t => {
+          if(!t.time) return false;
+          const h = parseInt(t.time.split(':')[0],10);
+          if(f === 'morning') return h >=5 && h <12;
+          if(f === 'afternoon') return h >=12 && h <17;
+          if(f === 'evening') return h >=17 && h <22;
+          if(f === 'night') return (h >=22 || h <5);
+          return true;
+        }).sort(compareTime);
+      }
+
+      function compareTime(a,b){
+        if(!a.time && !b.time) return 0;
+        if(!a.time) return 1;
+        if(!b.time) return -1;
+        return a.time.localeCompare(b.time);
+      }
+
+      function render(){
+        // refresh header date and labels
+        currentDateEl.textContent = formatDateLong(todayISO());
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        datePicker.value = selectedDate;
+        taskDate.value = selectedDate;
+        tasksForDayLabel.textContent = `for ${formatDateLong(selectedDate)}`;
+
+        // render tasks
+        const list = tasksFor(selectedDate, timeFilter.value);
+        tasksList.innerHTML = '';
+        if(list.length === 0){
+          emptyState.hidden = false;
+        } else {
+          emptyState.hidden = true;
+          for(const t of list){
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            // time status class
+            card.classList.add(getTimeStateClass(t.time, t.date));
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'task-time';
+            timeDiv.textContent = t.time ? formatTimeFromHM(t.time) : '—';
+
+            const body = document.createElement('div');
+            body.className = 'task-body';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = !!t.done;
+            checkbox.setAttribute('aria-label', 'Mark task done');
+            checkbox.addEventListener('change', () => toggleDone(t.id));
+
+            const text = document.createElement('div');
+            text.className = 'task-text';
+            if(t.done) text.classList.add('done');
+            text.textContent = t.text || '(no description)';
+
+            body.appendChild(checkbox);
+            body.appendChild(text);
+
+            const actions = document.createElement('div');
+            actions.className = 'task-actions';
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'icon-btn';
+            deleteBtn.setAttribute('aria-label', 'Delete task');
+            deleteBtn.innerHTML = '🗑';
+            deleteBtn.addEventListener('click', () => {
+              if(confirm('Delete this task?')) deleteTask(t.id);
+            });
+
+            actions.appendChild(deleteBtn);
+
+            card.appendChild(timeDiv);
+            card.appendChild(body);
+            card.appendChild(actions);
+
+            tasksList.appendChild(card);
+          }
+        }
+
+        // stats
+        const total = tasks.filter(x => x.date === selectedDate).length;
+        const done = tasks.filter(x => x.date === selectedDate && x.done).length;
+        statTotal.textContent = total;
+        statDone.textContent = done;
+        summary.textContent = `${total} task${total!==1 ? 's' : ''} • ${done} done`;
+      }
+
+      // returns 'past'|'current'|'upcoming'
+      function getTimeStateClass(timeStr, dateStr){
+        if(!timeStr) return 'upcoming';
+        const now = new Date();
+        const compareDate = new Date(dateStr + 'T' + timeStr);
+        // normalize to local timezone in case timezone offsets matter
+        const nowMs = now.getTime();
+        const taskMs = compareDate.getTime();
+        const diff = taskMs - nowMs;
+        // if same hour +/- 30 minutes consider current
+        const oneHour = 60*60*1000;
+        if(Math.abs(diff) < oneHour/2 && isSameDay(now, compareDate)) return 'current';
+        if(taskMs < nowMs) return 'past';
+        return 'upcoming';
+      }
+
+      function isSameDay(a,b){
+        return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+      }
+
+      // update dynamic highlights every minute
+      function periodicUpdate(){
+        // update local time
+        const now = new Date();
+        localTimeEl.textContent = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        // re-render to update "past/current/upcoming" classes
+        render();
+      }
+
+      // event handlers
+      addBtn.addEventListener('click', () => {
+        const text = taskText.value.trim();
+        const time = taskTime.value;
+        const date = taskDate.value || selectedDate;
+        if(!text){
+          alert('Please enter a task description.');
+          taskText.focus();
+          return;
+        }
+        addTask({text, time, date});
+        taskText.value = '';
+        taskTime.value = '';
+      });
+
+      addNowBtn.addEventListener('click', () => {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,'0');
+        const mm = String(now.getMinutes()).padStart(2,'0');
+        taskTime.value = hh + ':' + mm;
+        taskText.value = taskText.value || 'Quick task';
+        addTask({text: taskText.value.trim(), time: taskTime.value, date: taskDate.value || selectedDate});
+        taskText.value = '';
+        taskTime.value = '';
+      });
+
+      timeFilter.addEventListener('change', render);
+
+      datePicker.addEventListener('change', (e) => {
+        selectedDate = e.target.value || todayISO();
+        taskDate.value = selectedDate;
+        render();
+      });
+
+      jumpToToday.addEventListener('click', () => {
+        selectedDate = todayISO();
+        datePicker.value = selectedDate;
+        taskDate.value = selectedDate;
+        render();
+      });
+
+      clearAllBtn.addEventListener('click', () => {
+        if(confirm('Clear all tasks for selected day? This cannot be undone.')){
+          clearDay(selectedDate);
+        }
+      });
+
+      // quotes rotate each time page loads (and cycles every 10s while open)
+      function rotateQuotes(){
+        let idx = Math.floor(Math.random() * quotes.length);
+        quoteBox.textContent = quotes[idx];
+        setInterval(() => {
+          idx = (idx + 1) % quotes.length;
+          quoteBox.textContent = quotes[idx];
+        }, 10000);
+      }
+
+      // initialize date inputs
+      function initDates(){
+        selectedDate = todayISO();
+        datePicker.value = selectedDate;
+        taskDate.value = selectedDate;
+        // set min attribute optionally
+        const now = new Date();
+        const year = now.getFullYear();
+        document.getElementById('taskDate').setAttribute('min', `${year-1}-01-01`);
+        document.getElementById('taskDate').setAttribute('max', `${year+2}-12-31`);
+      }
+
+      // load tasks initially
+      function init(){
+        load();
+        initDates();
+        rotateQuotes();
+        render();
+        // update local time & classes once per second for lively feel
+        periodicUpdate();
+        setInterval(periodicUpdate, 1000);
+      }
+
+      // accessibility: allow Enter to add when typing in taskText and a time is set optionally
+      taskText.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){
+          addBtn.click();
+        }
+      });
+
+      // expose for debug (optional)
+      window._planner = {
+        addTask, deleteTask, toggleDone, save, load, tasks
+      };
+
+      // run
+      init();
+
+    })();
+  </script>
+</body>
+</html>
